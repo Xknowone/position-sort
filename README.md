@@ -7,9 +7,19 @@ It's conceptually similar to counting sort — but supports **floats**, **negati
 
 ---
 
+## 🔔 What's New (v2)
+
+- ✅ Rewritten implementation using **bucket arrays** instead of key-sorting dictionaries
+- 🔁 **No need to sort keys** → eliminates O(n log n) fallback
+- 📉 Achieves O(n) time in ideal cases (uniformly distributed real numbers)
+- 🧩 Supports real numbers, negative values, and small bin width control (`bin_width` param)
+- 📂 New module: `position_sort.py` replaces old `core.py` logic
+
+---
+
 ## ✨ Features
 
-- ✅ No direct comparisons between elements
+- ✅ No pairwise comparisons (non-comparison sort)
 - ➗ Works with floats, negatives, and repeated values
 - ♻️ Stable sorting (preserves relative order of equal elements)
 - 📦 Zero dependencies — pure Python
@@ -20,11 +30,12 @@ It's conceptually similar to counting sort — but supports **floats**, **negati
 ## 🚀 Quick Start
 
 ```python
-from position_sort.core import position_sort
+from position_sort import position_sort  # ← new import!
 
 arr = [3.5, -1.2, 0, 5, -1.2]
+sorted_arr = position_sort(arr, bin_width=0.01, sort_within_bucket=True)
 print("Before:", arr)
-print("After: ", position_sort(arr))
+print("After: ", sorted_arr)
 # Output: [-1.2, -1.2, 0, 3.5, 5]
 ```
 
@@ -37,9 +48,10 @@ print("After: ", position_sort(arr))
 ```
 position-sort/
 ├── position_sort/                # Core algorithm module
-│   └── core.py
+│   ├── core.py                   # (legacy)
+│   └── position_sort.py          # ✅ new version (v2)
 ├── examples/
-│   └── demo_position_sort.ipynb  # Jupyter demo notebook
+│   └── demo_position_sort.ipynb
 ├── README.md
 ├── LICENSE
 └── .gitignore
@@ -56,20 +68,29 @@ position-sort/
 
 ## 📚 Theory
 
-PositionSort maps each value `x` to a list at key `x`.  
-After placing all values, it flattens the keys in order to produce a sorted list — without pairwise comparisons.
+PositionSort maps each value `x` to a numeric index (bucket), not a key.  
+Then all buckets are traversed in linear order — **eliminating the need to sort keys**.
 
-```
-Input  →  [3.5, -1.2, 0, 5, -1.2]
-Mapping:
-  {
+### v1 (Key Mapping Version):
+```python
+position_map = {
     -1.2: [-1.2, -1.2],
      0:   [0],
      3.5: [3.5],
      5:   [5]
-  }
-Sorted Output → [-1.2, -1.2, 0, 3.5, 5]
+}
+# requires sorted(position_map.keys())
 ```
+
+### ✅ v2 (Bucket Indexing Version):
+```python
+index = int((x - min_val) / bin_width)
+buckets[index].append(x)
+
+# buckets are linear → no need to sort keys!
+```
+
+This reduces the overhead of `O(n log n)` sorting of dictionary keys, and moves toward a pure `O(n)` path when the input is reasonably well-distributed.
 
 ---
 
